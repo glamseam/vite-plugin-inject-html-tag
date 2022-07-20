@@ -5,6 +5,12 @@ interface LinkStyleBase {
     injectTo?: Extract<HtmlTagDescriptor['injectTo'], 'head' | 'head-prepend'>
 }
 
+interface Meta extends LinkStyleBase {
+    name?: string
+    property?: string
+    content: string | undefined
+}
+
 interface Link extends LinkStyleBase {
     href: string
 }
@@ -15,8 +21,10 @@ interface Style extends LinkStyleBase {
 
 export interface Head {
     title?: string
+    charset?: string
+    viewport?: string
     link?: Link[]
-    meta?: HtmlTagDescriptor['attrs'][]
+    meta?: Meta[]
     style?: Style[]
 }
 
@@ -47,6 +55,20 @@ export const injectHtmlTag = (htmlTag: HtmlTag): Plugin => {
         els.push(title)
     }
 
+    // meta.charset
+    els.push({
+        tag: 'meta',
+        attrs: { charset: htmlTag.head?.charset ?? 'utf-8' },
+        injectTo: 'head-prepend'
+    })
+
+    // meta.viewport
+    els.push({
+        tag: 'meta',
+        attrs: { name: 'viewport', content: htmlTag.head?.viewport ?? 'width=device-width,initial-scale=1' },
+        injectTo: 'head-prepend'
+    })
+
     if (htmlTag.head) {
         if (htmlTag.head.link && htmlTag.head.link.length > 0) {
             htmlTag.head.link.forEach((v) => {
@@ -64,12 +86,17 @@ export const injectHtmlTag = (htmlTag: HtmlTag): Plugin => {
 
         if (htmlTag.head.meta && htmlTag.head.meta.length > 0) {
             htmlTag.head.meta.forEach((v) => {
-                const meta: HtmlTagDescriptor = {
-                    tag: 'meta',
-                    attrs: v,
-                    injectTo: 'head-prepend'
+                if (v.content && v.name !== 'viewport' && v.attrs?.name !== 'viewport') {
+                    const meta: HtmlTagDescriptor = {
+                        tag: 'meta',
+                        attrs: {
+                            content: v.content,
+                            ...v.attrs
+                        },
+                        injectTo: 'head-prepend'
+                    }
+                    els.push(meta)
                 }
-                els.push(meta)
             })
         }
 
