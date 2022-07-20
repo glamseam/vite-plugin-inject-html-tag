@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "module": "commonjs",
+        "outDir": "dist",
+        "rootDir": "src",
+        "allowJs": true,
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "moduleResolution": "node",
+        "noErrorTruncation": true,
+        "removeComments": true,
+        "resolveJsonModule": true,
+        "skipLibCheck": true,
+        "sourceMap": true,
+        "strict": true,
+        "suppressImplicitAnyIndexErrors": true,
+        "target": "esnext"
+    },
+    "exclude": [
+        "dist",
+        "node_modules",
+        ".solid",
+        "solid",
+        "vite.config.ts"
+    ]
+}

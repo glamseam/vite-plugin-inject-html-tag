@@ -1,0 +1,44 @@
+{
+    "name": "@d-gs/vite-plugin-inject-html-tag",
+    "version": "0.0.1",
+    "description": "",
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "author": "__d",
+    "license": "MIT",
+    "keywords": [
+        "vite",
+        "plugin",
+        "html",
+        "transform"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/glamseam/vite-plugin-inject-html-tag.git"
+    },
+    "bugs": {
+        "url": "https://github.com/glamseam/vite-plugin-inject-html-tag/issues"
+    },
+    "scripts": {
+        "prebuild": "rimraf ./dist",
+        "build": "tsc -p tsconfig.build-plugin.json",
+        "pub": "pnpm build && pnpm publish --access=public",
+        "dev": "vite",
+        "solid:build": "vite build",
+        "solid:serve": "vite preview",
+        "lint": "eslint src -c .eslintrc.json --ext ts",
+        "lint:fix": "eslint --fix src -c .eslintrc.json --ext ts"
+    },
+    "devDependencies": {
+        "@d-gs/eslint-config": "^0.1.12",
+        "eslint": "^8.20.0",
+        "rimraf": "^3.0.2",
+        "solid-js": "^1.4.7",
+        "typescript": "^4.7.4",
+        "vite": "^3.0.2",
+        "vite-plugin-solid": "^2.3.0"
+    }
+}
