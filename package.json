@@ -1,6 +1,6 @@
 {
     "name": "@d-gs/vite-plugin-inject-html-tag",
-    "version": "0.0.1",
+    "version": "0.0.5",
     "description": "",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -24,7 +24,7 @@
     },
     "scripts": {
         "prebuild": "rimraf ./dist",
-        "build": "tsc -p tsconfig.build-plugin.json",
+        "build": "rimraf ./dist && tsc -p tsconfig.build-plugin.json",
         "pub": "pnpm build && pnpm publish --access=public",
         "dev": "vite",
         "solid:build": "vite build",
