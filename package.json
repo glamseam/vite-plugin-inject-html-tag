@@ -1,6 +1,6 @@
 {
     "name": "@d-gs/vite-plugin-inject-html-tag",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
@@ -23,7 +23,6 @@
         "url": "https://github.com/glamseam/vite-plugin-inject-html-tag/issues"
     },
     "scripts": {
-        "prebuild": "rimraf ./dist",
         "build": "rimraf ./dist && tsc -p tsconfig.build-plugin.json",
         "pub": "pnpm build && pnpm publish --access=public",
         "dev": "vite",
