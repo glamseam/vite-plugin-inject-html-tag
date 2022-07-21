@@ -97,6 +97,7 @@ export const injectHtmlTag = (htmlTag: HtmlTag): Plugin => {
                     const meta: HtmlTagDescriptor = {
                         tag: 'meta',
                         attrs: {
+                            name: v.name,
                             content: v.content,
                             ...v.attrs
                         },
