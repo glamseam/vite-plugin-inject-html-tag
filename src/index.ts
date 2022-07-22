@@ -45,7 +45,7 @@ export interface HtmlTag {
     script?: Script[]
 }
 
-export const injectHtmlTag = (htmlTag: HtmlTag): Plugin => {
+export const injectHtmlTag = (htmlTag: HtmlTag, { isCharset = true, isViewport = true } = {}): Plugin => {
     const els: HtmlTagDescriptor[] = []
 
     // head.title
@@ -59,18 +59,22 @@ export const injectHtmlTag = (htmlTag: HtmlTag): Plugin => {
     }
 
     // head.meta.charset
-    els.push({
-        tag: 'meta',
-        attrs: { charset: htmlTag.head?.charset ?? 'utf-8' },
-        injectTo: 'head-prepend'
-    })
+    if (isCharset) {
+        els.push({
+            tag: 'meta',
+            attrs: { charset: htmlTag.head?.charset ?? 'utf-8' },
+            injectTo: 'head-prepend'
+        })
+    }
 
     // head.meta.viewport
-    els.push({
-        tag: 'meta',
-        attrs: { name: 'viewport', content: htmlTag.head?.viewport ?? 'width=device-width,initial-scale=1' },
-        injectTo: 'head-prepend'
-    })
+    if (isViewport) {
+        els.push({
+            tag: 'meta',
+            attrs: { name: 'viewport', content: htmlTag.head?.viewport ?? 'width=device-width,initial-scale=1' },
+            injectTo: 'head-prepend'
+        })
+    }
 
     if (htmlTag.head) {
         // head.link
@@ -134,7 +138,7 @@ export const injectHtmlTag = (htmlTag: HtmlTag): Plugin => {
                 tag: v.tag,
                 attrs: v.attrs,
                 children: v.children,
-                injectTo: v.injectTo ?? 'body-prepend'
+                injectTo: v.injectTo ?? 'body'
             }
             els.push(body)
         })
@@ -145,10 +149,9 @@ export const injectHtmlTag = (htmlTag: HtmlTag): Plugin => {
             if (v.src || v.children) {
                 const script: HtmlTagDescriptor = {
                     tag: 'script',
-                    attrs: {
-                        src: v.src,
-                        ...v.attrs
-                    },
+                    attrs: v.src
+                        ? { src: v.src, ...v.attrs }
+                        : v.attrs,
                     children: v.children,
                     injectTo: v.injectTo ?? 'body'
                 }
