@@ -1,21 +1,33 @@
 import type { Plugin, HtmlTagDescriptor } from 'vite'
 
-interface LinkStyleBase {
+interface HeadChildBase {
     attrs?: HtmlTagDescriptor['attrs']
     injectTo?: Extract<HtmlTagDescriptor['injectTo'], 'head' | 'head-prepend'>
 }
 
-interface Meta extends LinkStyleBase {
+interface BodyChildBase {
+    attrs?: HtmlTagDescriptor['attrs']
+    injectTo?: Extract<HtmlTagDescriptor['injectTo'], 'body' | 'body-prepend'>
+}
+
+interface ScriptBase {
+    src?: string
+    children?: string
+}
+
+interface HeadMeta extends HeadChildBase {
     name?: string
     property?: string
     content: string | undefined
 }
 
-interface Link extends LinkStyleBase {
+interface HeadLink extends HeadChildBase {
     href: string | undefined
 }
 
-interface Style extends LinkStyleBase {
+type HeadScript = ScriptBase & HeadChildBase
+
+interface HeadStyle extends HeadChildBase {
     children: string | undefined
 }
 
@@ -23,147 +35,173 @@ export interface Head {
     title?: string
     charset?: string
     viewport?: string
-    link?: Link[]
-    meta?: Meta[]
-    style?: Style[]
+    link?: HeadLink[]
+    meta?: HeadMeta[]
+    script?: HeadScript[]
+    style?: HeadStyle[]
 }
+
+interface BodyDefault extends BodyChildBase {
+    tag: string
+    children?: string | Omit<BodyDefault, 'injectTo'>[]
+}
+
+type BodyScript = ScriptBase & BodyChildBase
 
 export interface Body {
-    tag: string
-    attrs?: HtmlTagDescriptor['attrs']
-    children?: string | Omit<Body, 'injectTo'>[]
-    injectTo?: Extract<HtmlTagDescriptor['injectTo'], 'body' | 'body-prepend'>
+    default?: BodyDefault[]
+    script?: BodyScript[]
 }
 
-export interface Script extends Omit<HtmlTagDescriptor, 'tag'> {
-    src?: string
-}
-
-export interface HtmlTag {
+export interface HtmlObject {
     head?: Head
-    body?: Body[]
-    script?: Script[]
+    body?: Body
 }
 
-export const injectHtmlTag = (htmlTag: HtmlTag, { isCharset = true, isViewport = true } = {}): Plugin => {
-    const els: HtmlTagDescriptor[] = []
+export const genHtmlTagDescriptor = (htmlObject: HtmlObject, { isCharset = true, isViewport = true } = {}) => {
+    const htmlTagDescriptors: HtmlTagDescriptor[] = []
 
     // head.title
-    if (htmlTag.head?.title) {
-        const title: HtmlTagDescriptor = {
+    if (htmlObject.head?.title) {
+        htmlTagDescriptors.push({
             tag: 'title',
-            children: htmlTag.head.title,
+            children: htmlObject.head.title,
             injectTo: 'head-prepend'
-        }
-        els.push(title)
+        })
     }
 
     // head.meta.charset
     if (isCharset) {
-        els.push({
+        htmlTagDescriptors.push({
             tag: 'meta',
-            attrs: { charset: htmlTag.head?.charset ?? 'utf-8' },
+            attrs: { charset: htmlObject.head?.charset ?? 'utf-8' },
             injectTo: 'head-prepend'
         })
     }
 
     // head.meta.viewport
     if (isViewport) {
-        els.push({
+        htmlTagDescriptors.push({
             tag: 'meta',
-            attrs: { name: 'viewport', content: htmlTag.head?.viewport ?? 'width=device-width,initial-scale=1' },
+            attrs: { name: 'viewport', content: htmlObject.head?.viewport ?? 'width=device-width,initial-scale=1' },
             injectTo: 'head-prepend'
         })
     }
 
-    if (htmlTag.head) {
-        // head.link
-        if (htmlTag.head.link && htmlTag.head.link.length > 0) {
-            htmlTag.head.link.forEach((v) => {
-                if (v.href) {
-                    const link: HtmlTagDescriptor = {
-                        tag: 'link',
-                        attrs: {
-                            href: v.href,
-                            ...v.attrs
-                        },
-                        injectTo: v.injectTo ?? 'head-prepend'
+    if (htmlObject.head) {
+        const headObject = htmlObject.head
+        const headKeys = Object.keys(htmlObject.head)
+        headKeys.forEach((key) => {
+            // head.link
+            if (key === 'link' && headObject.link && headObject.link.length > 0) {
+                headObject.link.forEach((v) => {
+                    if (v.href) {
+                        htmlTagDescriptors.push({
+                            tag: 'link',
+                            attrs: {
+                                href: v.href,
+                                ...v.attrs
+                            },
+                            injectTo: v.injectTo ?? 'head-prepend'
+                        })
                     }
-                    els.push(link)
-                }
-            })
-        }
+                })
+            }
 
-        // head.meta
-        if (htmlTag.head.meta && htmlTag.head.meta.length > 0) {
-            htmlTag.head.meta.forEach((v) => {
-                if (v.content && v.name !== 'viewport' && v.attrs?.name !== 'viewport') {
-                    const meta: HtmlTagDescriptor = {
-                        tag: 'meta',
-                        attrs: {
-                            name: v.name,
-                            content: v.content,
-                            ...v.attrs
-                        },
-                        injectTo: 'head-prepend'
+            // head.meta
+            if (key === 'meta' && headObject.meta && headObject.meta.length > 0) {
+                headObject.meta.forEach((v) => {
+                    if (v.content && v.name !== 'viewport' && v.attrs?.name !== 'viewport') {
+                        htmlTagDescriptors.push({
+                            tag: 'meta',
+                            attrs: {
+                                name: v.name,
+                                content: v.content,
+                                ...v.attrs
+                            },
+                            injectTo: v.injectTo ?? 'head-prepend'
+                        })
                     }
-                    els.push(meta)
-                }
-            })
-        }
+                })
+            }
 
-        // head.style
-        if (htmlTag.head.style && htmlTag.head.style.length > 0) {
-            htmlTag.head.style.forEach((v) => {
-                if (v.children) {
-                    const style: HtmlTagDescriptor = {
-                        tag: 'style',
-                        attrs: {
-                            type: 'text/css',
-                            ...v.attrs
-                        },
+            // head.script
+            if (key === 'script' && headObject.script && headObject.script.length > 0) {
+                headObject.script.forEach((v) => {
+                    htmlTagDescriptors.push({
+                        tag: 'script',
+                        attrs: v.src
+                            ? { src: v.src, ...v.attrs }
+                            : v.attrs,
                         children: v.children,
-                        injectTo: v.injectTo ?? 'head-prepend'
+                        injectTo: v.injectTo ?? 'body-prepend'
+                    })
+                })
+            }
+
+            // head.style
+            if (key === 'style' && headObject.style && headObject.style.length > 0) {
+                headObject.style.forEach((v) => {
+                    if (v.children) {
+                        htmlTagDescriptors.push({
+                            tag: 'style',
+                            attrs: {
+                                type: 'text/css',
+                                ...v.attrs
+                            },
+                            children: v.children,
+                            injectTo: v.injectTo ?? 'head-prepend'
+                        })
                     }
-                    els.push(style)
-                }
-            })
-        }
-    }
-
-    // body
-    if (htmlTag.body) {
-        htmlTag.body.forEach((v) => {
-            const body: HtmlTagDescriptor = {
-                tag: v.tag,
-                attrs: v.attrs,
-                children: v.children,
-                injectTo: v.injectTo ?? 'body'
-            }
-            els.push(body)
-        })
-    }
-
-    if (htmlTag.script) {
-        htmlTag.script.forEach((v) => {
-            if (v.src || v.children) {
-                const script: HtmlTagDescriptor = {
-                    tag: 'script',
-                    attrs: v.src
-                        ? { src: v.src, ...v.attrs }
-                        : v.attrs,
-                    children: v.children,
-                    injectTo: v.injectTo ?? 'body'
-                }
-                els.push(script)
+                })
             }
         })
     }
+
+    if (htmlObject.body) {
+        const bodyObject = htmlObject.body
+        const bodyKeys = Object.keys(htmlObject.body)
+        bodyKeys.forEach((key) => {
+            // body.default
+            if (key === 'default' && bodyObject.default && bodyObject.default.length > 0) {
+                bodyObject.default.forEach((v) => {
+                    htmlTagDescriptors.push({
+                        tag: v.tag,
+                        attrs: v.attrs,
+                        children: v.children,
+                        injectTo: v.injectTo ?? 'body-prepend'
+                    })
+                })
+            }
+
+            // body.script
+            if (key === 'script' && bodyObject.script && bodyObject.script.length > 0) {
+                bodyObject.script.forEach((v) => {
+                    htmlTagDescriptors.push({
+                        tag: 'script',
+                        attrs: v.src
+                            ? { src: v.src, ...v.attrs }
+                            : v.attrs,
+                        children: v.children,
+                        injectTo: v.injectTo ?? 'body-prepend'
+                    })
+                })
+            }
+        })
+    }
+
+    return htmlTagDescriptors
+}
+
+export const injectHtmlTag = (
+    htmlObject: HtmlObject,
+    { isCharset = true, isViewport = true } = {}
+): Plugin => {
 
     return {
         name: 'inject-html-tag',
         transformIndexHtml() {
-            return els
+            return genHtmlTagDescriptor(htmlObject, { isCharset, isViewport })
         }
     }
 }

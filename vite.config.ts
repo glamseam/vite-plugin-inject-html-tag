@@ -1,8 +1,8 @@
 import { defineConfig } from 'vite'
 import solidPlugin from 'vite-plugin-solid'
-import { injectHtmlTag, HtmlTag } from './src'
+import { injectHtmlTag, HtmlObject } from './src'
 
-const htmlTag: HtmlTag = {
+const htmlObject: HtmlObject = {
     head: {
         title: 'Solid App',
         viewport: 'width=device-width,initial-scale=1,viewport-fit=cover',
@@ -23,6 +23,6 @@ export default defineConfig({
     },
     plugins: [
         solidPlugin(),
-        injectHtmlTag(htmlTag)
+        injectHtmlTag(htmlObject)
     ]
 })
